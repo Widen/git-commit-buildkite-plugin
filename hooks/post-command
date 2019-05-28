@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+set -x
 
 if [[ ${BUILDKITE_COMMAND_EXIT_STATUS:-0} != "0" ]]
 then
@@ -35,6 +36,9 @@ if [[ -n "$add_path" ]]; then
   if ! git diff-index --quiet HEAD; then
     echo "--- Committing changes"
     git commit -m "${commitmessage}"
+
+    echo "--- Rebasing changes on ${remote}/${branch}"
+    git rebase "${remote}/${branch}"
 
     echo "--- Pushing ${branch} to ${remote}"
     git push "${remote}" "${branch}"
