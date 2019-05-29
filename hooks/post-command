@@ -37,8 +37,8 @@ if [[ -n "$add_path" ]]; then
     echo "--- Committing changes"
     git commit -m "${commitmessage}"
 
-    echo "--- Rebasing changes on ${remote}/${branch}"
-    git rebase "${remote}/${branch}"
+    echo "--- Pulling changes from ${remote}/${branch}"
+    git pull --rebase "${remote} ${branch}"
 
     echo "--- Pushing ${branch} to ${remote}"
     git push "${remote}" "${branch}"
