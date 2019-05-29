@@ -3,6 +3,28 @@
 set -euo pipefail
 set -x
 
+# stash script -- https://gist.github.com/steve-jansen/5117721
+stash() {
+  # check if we have uncommitted changes to stash
+  git status --porcelain | grep "^." >/dev/null;
+
+  if [[ $? -eq 0 ]]
+  then
+    if git stash save -u "git-update on `date`";
+    then
+      stash=1;
+    fi
+  fi
+}
+
+unstash() {
+  # check if we have uncommitted change to restore from the stash
+  if [[ $stash -eq 1 ]]
+  then
+    git stash pop;
+  fi
+}
+
 if [[ ${BUILDKITE_COMMAND_EXIT_STATUS:-0} != "0" ]]
 then
   echo "--- Skipping git-commit because the command failed"
@@ -26,7 +48,10 @@ if [[ "$create_branch" == "true" ]]; then
   git checkout -b "${branch}"
 else
   git fetch "${remote}" "${branch}:${branch}"
+  stash=0;
+  stash;
   git checkout "${branch}"
+  unstash;
 fi
 
 # Add commits
@@ -36,9 +61,6 @@ if [[ -n "$add_path" ]]; then
   if ! git diff-index --quiet HEAD; then
     echo "--- Committing changes"
     git commit -m "${commitmessage}"
-
-    echo "--- Pulling changes from ${remote}/${branch}"
-    git pull --rebase "${remote} ${branch}"
 
     echo "--- Pushing ${branch} to ${remote}"
     git push "${remote}" "${branch}"
